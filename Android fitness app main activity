@@ -1,0 +1,85 @@
+// MainActivity.kt
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var carouselAdapter: CarouselAdapter
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        setupBottomNavigation()
+        setupCarousel()
+        setupUserProfile()
+    }
+    
+    private fun setupBottomNavigation() {
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> loadFragment(HomeFragment())
+                R.id.nav_workouts -> loadFragment(WorkoutsFragment())
+                R.id.nav_nutrition -> loadFragment(NutritionFragment())
+                R.id.nav_profile -> loadFragment(ProfileFragment())
+            }
+            true
+        }
+    }
+    
+    private fun setupCarousel() {
+        carouselAdapter = CarouselAdapter(listOf(
+            CarouselItem(R.drawable.workout1, "Morning Yoga"),
+            CarouselItem(R.drawable.workout2, "HIIT Training"),
+            CarouselItem(R.drawable.workout3, "Strength Training")
+        ))
+        
+        binding.viewPager.apply {
+            adapter = carouselAdapter
+            orientation = ViewPager2.ORIENTATION_HORIZONTAL
+            
+            // Auto scroll
+            val handler = Handler(Looper.getMainLooper())
+            val runnable = object : Runnable {
+                override fun run() {
+                    currentItem = if (currentItem < (adapter?.itemCount ?: 0) - 1) currentItem + 1 else 0
+                    handler.postDelayed(this, 3000)
+                }
+            }
+            handler.postDelayed(runnable, 3000)
+        }
+    }
+}
+
+// CarouselAdapter.kt
+class CarouselAdapter(
+    private val items: List<CarouselItem>
+) : RecyclerView.Adapter<CarouselAdapter.CarouselViewHolder>() {
+    
+    inner class CarouselViewHolder(private val binding: ItemCarouselBinding) : 
+        RecyclerView.ViewHolder(binding.root) {
+        
+        fun bind(item: CarouselItem) {
+            Glide.with(binding.root)
+                .load(item.imageRes)
+                .into(binding.carouselImage)
+            binding.carouselTitle.text = item.title
+        }
+    }
+    
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CarouselViewHolder {
+        val binding = ItemCarouselBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
+        return CarouselViewHolder(binding)
+    }
+    
+    override fun onBindViewHolder(holder: CarouselViewHolder, position: Int) {
+        holder.bind(items[position])
+    }
+    
+    override fun getItemCount() = items.size
+}
+
+data class CarouselItem(
+    @DrawableRes val imageRes: Int,
+    val title: String
+)
